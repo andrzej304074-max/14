@@ -10,8 +10,10 @@ export type Backend = {
 };
 
 const ID = "lists";
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// akceptuje też URL wklejony z końcówką /rest/v1/ – bierzemy samą domenę
+const rawUrl = process.env.SUPABASE_URL?.trim();
+const url = rawUrl ? new URL(rawUrl).origin : undefined;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
 function supabaseBackend(): Backend {
   const db = createClient(url!, key!, { auth: { persistSession: false } });
