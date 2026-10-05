@@ -50,6 +50,7 @@ export function duplicate(list: List): List {
   return {
     ...newList(`${list.name} (kopia)`, []),
     pickCount: list.pickCount,
+    ...(list.icon ? { icon: list.icon } : {}),
     items: list.items.map((i) => ({ ...i, id: uid() })),
   };
 }

@@ -28,7 +28,9 @@ describe("lists", () => {
     const m = merge([a, b], "M");
     expect(m.items.map((i) => i.text)).toEqual(["x", "y", "z"]);
     expect(a.items).toHaveLength(2);
+    a.icon = { type: "emoji", value: "🍕" };
     const d = duplicate(a);
+    expect(d.icon).toEqual(a.icon);
     expect(d.items[0].id).not.toBe(a.items[0].id);
     expect(d.name).toBe("A (kopia)");
   });

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { Item, List } from "@/lib/types";
+import type { Icon, Item, List } from "@/lib/types";
+import IconPicker from "./IconPicker";
 
 type Props = {
   list: List;
@@ -21,18 +22,14 @@ function AutoText({
   value,
   onChange,
   onCommit,
-  onEnter,
   placeholder,
-  onPaste,
 }: {
   className?: string;
   initial?: string; // tryb niekontrolowany: zapis przy utracie fokusu
   value?: string; // tryb kontrolowany (pole dodawania)
   onChange?: (v: string) => void;
   onCommit?: (v: string) => void;
-  onEnter?: () => void;
   placeholder?: string;
-  onPaste?: React.ClipboardEventHandler<HTMLTextAreaElement>;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const fit = () => {
@@ -70,13 +67,6 @@ function AutoText({
         fit();
       }}
       onBlur={(e) => onCommit?.(e.target.value)}
-      onPaste={onPaste}
-      onKeyDown={(e) => {
-        if (e.key !== "Enter" || e.shiftKey) return;
-        e.preventDefault();
-        if (onEnter) onEnter();
-        else (e.target as HTMLTextAreaElement).blur();
-      }}
     />
   );
 }
@@ -120,6 +110,11 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
     <section className={`card${chosen ? " chosen" : ""}`}>
       <div className="card-head">
         {mergeMode && <input type="checkbox" checked={chosen} onChange={toggleChosen} aria-label="Wybierz do połączenia" />}
+        <IconPicker
+          icon={list.icon}
+          name={list.name}
+          onChange={(icon: Icon | null) => patch(base, { icon })}
+        />
         <AutoText
           key={list.name}
           className="title"
@@ -180,12 +175,7 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
           className="add-text"
           value={text}
           onChange={setText}
-          onEnter={add}
           placeholder="Nowa pozycja…"
-          onPaste={(e) => {
-            const t = e.clipboardData.getData("text");
-            if (t.includes("\n")) { e.preventDefault(); post(`${base}/items`, { text: t }); }
-          }}
         />
         <button className="primary" onClick={add} disabled={!text.trim()}>Dodaj</button>
       </div>

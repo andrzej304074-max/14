@@ -67,3 +67,21 @@ textarea{resize:none;overflow:hidden;font:inherit;color:inherit;line-height:1.4}
   .badge{margin-top:11px}
   .item-text,.add-text{padding:10px 6px!important}
 }
+
+/* wielolinijkowy tekst */
+.item-text,.title,.add-text,.result strong{white-space:pre-wrap}
+.result strong{word-break:break-word}
+
+/* ikony list */
+.icon-wrap{position:relative;flex:none}
+.icon{width:40px;height:40px;min-height:0!important;padding:0!important;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent-soft);border:1px solid var(--line)}
+.icon img{width:100%;height:100%;object-fit:cover;display:block}
+.icon .emoji{font-size:22px;line-height:1}
+.icon .letter{color:var(--accent);font-weight:600}
+.backdrop{position:fixed;inset:0;z-index:10}
+.popover{position:absolute;top:48px;left:0;z-index:11;width:290px;max-width:calc(100vw - 48px);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:10px}
+.emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.emoji-grid button{border:0;background:none;font-size:22px;padding:4px;min-height:0}
+.emoji-grid button:hover{background:var(--accent-soft);border-radius:8px}
+.popover-actions{display:flex;gap:8px}
+.popover-actions button{flex:1;font-size:14px}
