@@ -1,10 +1,10 @@
 import { mutate } from "@/lib/store";
-import { fail, ok, type Ctx } from "@/lib/api";
+import { fail, ok, type Ctx, safe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 type P = Ctx<{ id: string; itemId: string }>;
 
-export async function PATCH(req: Request, { params }: P) {
+async function PATCH_impl(req: Request, { params }: P) {
   const { id, itemId } = await params;
   const b = await req.json().catch(() => ({}));
   const res = await mutate((lists) => {
@@ -30,7 +30,7 @@ export async function PATCH(req: Request, { params }: P) {
   return res ? ok(res) : fail("Nie znaleziono", 404);
 }
 
-export async function DELETE(_: Request, { params }: P) {
+async function DELETE_impl(_: Request, { params }: P) {
   const { id, itemId } = await params;
   const res = await mutate((lists) => {
     let found = null as unknown;
@@ -47,3 +47,6 @@ export async function DELETE(_: Request, { params }: P) {
   });
   return res ? ok(res) : fail("Nie znaleziono", 404);
 }
+
+export const PATCH = safe(PATCH_impl);
+export const DELETE = safe(DELETE_impl);

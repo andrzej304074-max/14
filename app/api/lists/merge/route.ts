@@ -1,10 +1,10 @@
 import { mutate } from "@/lib/store";
 import { merge } from "@/lib/lists";
-import { fail, ok } from "@/lib/api";
+import { fail, ok, safe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
+async function POST_impl(req: Request) {
   const { ids, name } = await req.json().catch(() => ({}));
   if (!Array.isArray(ids) || ids.length < 2) return fail("Wybierz co najmniej 2 listy");
   const res = await mutate((lists) => {
@@ -15,3 +15,5 @@ export async function POST(req: Request) {
   });
   return res ? ok(res) : fail("Nie znaleziono list", 404);
 }
+
+export const POST = safe(POST_impl);

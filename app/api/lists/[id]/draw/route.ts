@@ -1,11 +1,11 @@
 import { mutate } from "@/lib/store";
 import { draw } from "@/lib/lists";
 import type { Item, List } from "@/lib/types";
-import { fail, ok, type Ctx } from "@/lib/api";
+import { fail, ok, type Ctx, safe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(_: Request, { params }: Ctx<{ id: string }>) {
+async function POST_impl(_: Request, { params }: Ctx<{ id: string }>) {
   const { id } = await params;
   const res = await mutate((lists) => {
     const cur = lists.find((l) => l.id === id);
@@ -17,3 +17,5 @@ export async function POST(_: Request, { params }: Ctx<{ id: string }>) {
   if (!res.picked.length) return fail("Brak zaznaczonych pozycji do losowania");
   return ok(res);
 }
+
+export const POST = safe(POST_impl);

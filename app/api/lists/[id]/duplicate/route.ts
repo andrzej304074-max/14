@@ -1,10 +1,10 @@
 import { mutate } from "@/lib/store";
 import { duplicate } from "@/lib/lists";
-import { fail, ok, type Ctx } from "@/lib/api";
+import { fail, ok, type Ctx, safe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(_: Request, { params }: Ctx<{ id: string }>) {
+async function POST_impl(_: Request, { params }: Ctx<{ id: string }>) {
   const { id } = await params;
   const res = await mutate((lists) => {
     const cur = lists.find((l) => l.id === id);
@@ -14,3 +14,5 @@ export async function POST(_: Request, { params }: Ctx<{ id: string }>) {
   });
   return res ? ok(res) : fail("Nie znaleziono", 404);
 }
+
+export const POST = safe(POST_impl);
