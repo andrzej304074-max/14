@@ -1,0 +1,138 @@
+"use client";
+import { useState } from "react";
+import type { Item, List } from "@/lib/types";
+
+type Props = {
+  list: List;
+  mergeMode: boolean;
+  chosen: boolean;
+  toggleChosen: () => void;
+  onList: (l: List) => void;
+  onAdd: (l: List) => void;
+  onDelete: () => void;
+  act: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
+  call: <T = any>(url: string, method?: string, body?: unknown) => Promise<T>;
+};
+
+export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList, onAdd, onDelete, act, call }: Props) {
+  const [text, setText] = useState("");
+  const [picked, setPicked] = useState<Item[] | null>(null);
+  const base = `/api/lists/${list.id}`;
+
+  // ile losowań temu pozycja była wylosowana (1 = ostatnie), najnowsze wygrywa
+  const ago = new Map<string, number>();
+  for (const d of list.draws)
+    for (const id of d.itemIds) ago.set(id, list.drawCounter - d.n + 1);
+
+  const selected = list.items.filter((i) => i.selected).length;
+  const patch = async (url: string, body: unknown) => {
+    const l = await act(() => call<List>(url, "PATCH", body));
+    if (l) onList(l);
+  };
+  const post = async (url: string, body?: unknown) => {
+    const l = await act(() => call<List>(url, "POST", body ?? {}));
+    if (l) onList(l);
+  };
+
+  const add = async () => {
+    if (!text.trim()) return;
+    const t = text;
+    setText("");
+    await post(`${base}/items`, { text: t });
+  };
+
+  const drawNow = async () => {
+    const r = await act(() => call<{ list: List; picked: Item[] }>(`${base}/draw`, "POST"));
+    if (r) {
+      onList(r.list);
+      setPicked(r.picked);
+    }
+  };
+
+  return (
+    <section className={`card${chosen ? " chosen" : ""}`}>
+      <div className="card-head">
+        {mergeMode && <input type="checkbox" checked={chosen} onChange={toggleChosen} aria-label="Wybierz do połączenia" />}
+        <input
+          key={list.name}
+          className="title"
+          defaultValue={list.name}
+          onBlur={(e) => e.target.value.trim() && e.target.value !== list.name && patch(base, { name: e.target.value })}
+          onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+        />
+      </div>
+
+      <div className="row controls">
+        <button className="primary" onClick={drawNow} disabled={!selected}>Losuj</button>
+        <div className="stepper" title="Ile pozycji losować">
+          <button onClick={() => patch(base, { pickCount: list.pickCount - 1 })} disabled={list.pickCount <= 1}>−</button>
+          <span>{list.pickCount}</span>
+          <button onClick={() => patch(base, { pickCount: list.pickCount + 1 })}>+</button>
+        </div>
+        <span className="muted small">{selected}/{list.items.length} zazn.</span>
+      </div>
+
+      {picked && (
+        <div className="result">
+          <div className="result-head">
+            <span>Wylosowano</span>
+            <button className="link" onClick={() => setPicked(null)}>×</button>
+          </div>
+          {picked.map((p) => <strong key={p.id}>{p.text}</strong>)}
+        </div>
+      )}
+
+      <ul>
+        {list.items.map((i) => {
+          const a = ago.get(i.id);
+          return (
+            <li key={i.id} className={i.selected ? "" : "off"}>
+              <input type="checkbox" checked={i.selected} onChange={(e) => patch(`${base}/items/${i.id}`, { selected: e.target.checked })} />
+              <input
+                key={i.text}
+                className="item-text"
+                defaultValue={i.text}
+                onBlur={(e) => e.target.value.trim() && e.target.value !== i.text && patch(`${base}/items/${i.id}`, { text: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+              />
+              {a && (
+                <span
+                  className="badge"
+                  style={{ opacity: 1.05 - a * 0.12 }}
+                  title={a === 1 ? "Wylosowane w ostatnim losowaniu" : `Wylosowane ${a} losowań temu`}
+                >
+                  {a}
+                </span>
+              )}
+              <button className="x" aria-label="Usuń pozycję" onClick={async () => { const l = await act(() => call<List>(`${base}/items/${i.id}`, "DELETE")); if (l) onList(l); }}>×</button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <textarea
+        value={text}
+        rows={1}
+        placeholder="Dodaj pozycję (Enter; wklej wiele linii)"
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); add(); } }}
+        onPaste={(e) => {
+          const t = e.clipboardData.getData("text");
+          if (t.includes("\n")) { e.preventDefault(); post(`${base}/items`, { text: t }); }
+        }}
+      />
+
+      <div className="row foot">
+        <button onClick={() => post(`${base}/select`, { mode: "all" })}>Zaznacz wszystko</button>
+        <button onClick={() => post(`${base}/select`, { mode: "none" })}>Odznacz wszystko</button>
+        <span className="spacer" />
+        <button onClick={async () => { const l = await act(() => call<List>(`${base}/duplicate`, "POST")); if (l) onAdd(l); }}>Kopiuj</button>
+        <button className="danger" onClick={async () => {
+          if (!confirm(`Usunąć listę „${list.name}”?`)) return;
+          const ok = await act(() => call(base, "DELETE"));
+          if (ok) onDelete();
+        }}>Usuń</button>
+      </div>
+    </section>
+  );
+}
