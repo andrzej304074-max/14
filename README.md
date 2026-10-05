@@ -8,12 +8,17 @@ wylosowanych w ostatnich 7 losowaniach danej listy (1 = ostatnie, im starsze, ty
 
 ## Uruchomienie lokalne
     npm install && npm run dev
-Bez konfiguracji dane zapisują się w `.data/db.json`.
+Bez zmiennych środowiskowych dane zapisują się w `.data/db.json`.
 
-## Wdrożenie na Vercel
-1. Zaimportuj repo w Vercel.
-2. W projekcie: **Storage → Marketplace → Upstash Redis** → podłącz do projektu
-   (ustawia `KV_REST_API_URL` / `KV_REST_API_TOKEN`; obsługiwane też `UPSTASH_REDIS_REST_*`).
-3. Redeploy. Bez Redisa na Vercelu dane nie byłyby trwałe (brak zapisu na dysku).
+## Wdrożenie na Vercel (baza: Supabase, darmowa)
+1. [supabase.com](https://supabase.com) → **New project** (plan Free, region np. Frankfurt).
+2. **SQL Editor** → wklej zawartość `supabase/schema.sql` → **Run**.
+3. **Project Settings → API**: skopiuj `Project URL` oraz klucz `service_role` (tajny, tylko serwer).
+4. Vercel → projekt → **Settings → Environment Variables** dodaj (Production, Preview, Development):
+   - `SUPABASE_URL` = Project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` = klucz service_role
+5. **Deployments → Redeploy**.
+
+Darmowy Supabase usypia projekt po 7 dniach bez ruchu (wznawiasz jednym kliknięciem w panelu).
 
 Testy: `npm test`.
