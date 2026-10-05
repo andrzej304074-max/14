@@ -8,40 +8,40 @@ const EMOJI = [
   "🏠","💼","🛒","🎁","💡","⭐","❤️","🔥","🎲","🐶",
 ];
 
-/** Kadruje zdjęcie do kwadratu 96×96 i zwraca mały data URL. */
-async function shrink(file: File): Promise<string> {
+/** Kadruje zdjęcie do kwadratu size×size i zwraca data URL. */
+async function shrink(file: File, size: number, quality: number): Promise<string> {
   const bmp = await createImageBitmap(file);
-  const size = 96;
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const side = Math.min(bmp.width, bmp.height);
-  c.getContext("2d")!.drawImage(
-    bmp,
-    (bmp.width - side) / 2,
-    (bmp.height - side) / 2,
-    side,
-    side,
-    0,
-    0,
-    size,
-    size,
-  );
-  const webp = c.toDataURL("image/webp", 0.8);
-  return webp.startsWith("data:image/webp") ? webp : c.toDataURL("image/jpeg", 0.8);
+  c.getContext("2d")!.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size);
+  const webp = c.toDataURL("image/webp", quality);
+  return webp.startsWith("data:image/webp") ? webp : c.toDataURL("image/jpeg", quality);
 }
 
-export default function IconPicker({
-  icon,
-  name,
-  onChange,
-}: {
+/** Mała ikona (emoji lub miniatura zdjęcia) do wyświetlania w tekście. */
+export function IconBadge({ icon, className = "" }: { icon: Icon; className?: string }) {
+  return (
+    <span className={`icon-badge ${className}`}>
+      {icon.type === "image" ? <img src={icon.value} alt="" /> : icon.value}
+    </span>
+  );
+}
+
+type Props = {
   icon?: Icon;
-  name: string;
+  name?: string;
   onChange: (icon: Icon | null) => void;
-}) {
+  /** list: zdjęcie 480px wyświetlane jako duży kwadrat; item: mała ikona, zdjęcie 64px */
+  variant: "list" | "item";
+};
+
+export default function IconPicker({ icon, name = "", onChange, variant }: Props) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState("");
   const file = useRef<HTMLInputElement>(null);
+  const isList = variant === "list";
+  const cover = isList && icon?.type === "image";
 
   const pick = (i: Icon | null) => {
     setOpen(false);
@@ -49,16 +49,29 @@ export default function IconPicker({
   };
 
   return (
-    <div className="icon-wrap">
-      <button className="icon" onClick={() => setOpen(!open)} aria-label="Zmień ikonę listy" title="Zmień ikonę">
-        {icon?.type === "image" ? (
-          <img src={icon.value} alt="" />
-        ) : icon ? (
-          <span className="emoji">{icon.value}</span>
-        ) : (
-          <span className="letter">{(name.trim()[0] ?? "?").toUpperCase()}</span>
-        )}
-      </button>
+    <div className={`icon-wrap ${variant}${cover ? " cover-wrap" : ""}`}>
+      {cover ? (
+        <button className="cover" onClick={() => setOpen(!open)} aria-label="Zmień zdjęcie listy" title="Zmień zdjęcie">
+          <img src={icon!.value} alt="" />
+        </button>
+      ) : (
+        <button
+          className={`icon${isList ? "" : " sm"}${!icon && !isList ? " empty" : ""}`}
+          onClick={() => setOpen(!open)}
+          aria-label={isList ? "Zmień ikonę listy" : "Dodaj ikonę opcji"}
+          title={isList ? "Zmień ikonę" : "Ikona opcji"}
+        >
+          {icon?.type === "image" ? (
+            <img src={icon.value} alt="" />
+          ) : icon ? (
+            <span className="emoji">{icon.value}</span>
+          ) : isList ? (
+            <span className="letter">{(name.trim()[0] ?? "?").toUpperCase()}</span>
+          ) : (
+            <span className="plus">+</span>
+          )}
+        </button>
+      )}
       {open && (
         <>
           <div className="backdrop" onClick={() => setOpen(false)} />
@@ -83,7 +96,7 @@ export default function IconPicker({
                 e.target.value = "";
                 if (!f) return;
                 try {
-                  pick({ type: "image", value: await shrink(f) });
+                  pick({ type: "image", value: await shrink(f, isList ? 480 : 64, isList ? 0.75 : 0.8) });
                 } catch {
                   setErr("Nie udało się wczytać zdjęcia");
                 }

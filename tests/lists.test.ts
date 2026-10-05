@@ -25,7 +25,9 @@ describe("lists", () => {
   it("merge dedups and keeps originals; duplicate gets new ids", () => {
     const a = newList("A", ["x", "y"]);
     const b = newList("B", ["Y", "z"]);
+    a.items[0].icon = { type: "emoji", value: "🍕" };
     const m = merge([a, b], "M");
+    expect(m.items[0].icon).toEqual({ type: "emoji", value: "🍕" });
     expect(m.items.map((i) => i.text)).toEqual(["x", "y", "z"]);
     expect(a.items).toHaveLength(2);
     a.icon = { type: "emoji", value: "🍕" };

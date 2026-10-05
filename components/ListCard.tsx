@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Icon, Item, List } from "@/lib/types";
-import IconPicker from "./IconPicker";
+import IconPicker, { IconBadge } from "./IconPicker";
 
 type Props = {
   list: List;
@@ -108,13 +108,14 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
 
   return (
     <section className={`card${chosen ? " chosen" : ""}`}>
+      {list.icon?.type === "image" && (
+        <IconPicker variant="list" icon={list.icon} name={list.name} onChange={(icon: Icon | null) => patch(base, { icon })} />
+      )}
       <div className="card-head">
         {mergeMode && <input type="checkbox" checked={chosen} onChange={toggleChosen} aria-label="Wybierz do połączenia" />}
-        <IconPicker
-          icon={list.icon}
-          name={list.name}
-          onChange={(icon: Icon | null) => patch(base, { icon })}
-        />
+        {list.icon?.type !== "image" && (
+          <IconPicker variant="list" icon={list.icon} name={list.name} onChange={(icon: Icon | null) => patch(base, { icon })} />
+        )}
         <AutoText
           key={list.name}
           className="title"
@@ -139,7 +140,12 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
             <span>Wylosowano</span>
             <button className="link" onClick={() => setPicked(null)} aria-label="Zamknij">×</button>
           </div>
-          {picked.map((p) => <strong key={p.id}>{p.text}</strong>)}
+          {picked.map((p) => (
+            <div className="picked" key={p.id}>
+              {p.icon && <IconBadge icon={p.icon} />}
+              <strong>{p.text}</strong>
+            </div>
+          ))}
         </div>
       )}
 
@@ -149,6 +155,7 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
           return (
             <li key={i.id} className={i.selected ? "" : "off"}>
               <input type="checkbox" checked={i.selected} onChange={(e) => patch(`${base}/items/${i.id}`, { selected: e.target.checked })} />
+              <IconPicker variant="item" icon={i.icon} onChange={(icon: Icon | null) => patch(`${base}/items/${i.id}`, { icon })} />
               <AutoText
                 key={i.text}
                 className="item-text"

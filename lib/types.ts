@@ -1,6 +1,6 @@
-export type Item = { id: string; text: string; selected: boolean };
-export type Draw = { n: number; itemIds: string[]; at: number };
 export type Icon = { type: "emoji" | "image"; value: string };
+export type Item = { id: string; text: string; selected: boolean; icon?: Icon };
+export type Draw = { n: number; itemIds: string[]; at: number };
 export type List = {
   id: string;
   name: string;

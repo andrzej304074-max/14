@@ -33,7 +33,7 @@ export default function Page() {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 5000);
+    const t = setInterval(() => !document.hidden && refresh(), 10000);
     window.addEventListener("focus", refresh);
     return () => {
       clearInterval(t);

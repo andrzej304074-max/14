@@ -85,3 +85,24 @@ textarea{resize:none;overflow:hidden;font:inherit;color:inherit;line-height:1.4}
 .emoji-grid button:hover{background:var(--accent-soft);border-radius:8px}
 .popover-actions{display:flex;gap:8px}
 .popover-actions button{flex:1;font-size:14px}
+
+/* duże zdjęcie listy: kwadrat na całą szerokość karty */
+.icon-wrap.cover-wrap{width:100%}
+.cover{display:block;width:100%;aspect-ratio:1/1;padding:0!important;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--accent-soft);min-height:0!important}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-wrap .popover{top:10px;left:10px}
+
+/* małe ikony opcji */
+.icon.sm{width:30px;height:30px;margin-top:2px}
+.icon.sm .emoji{font-size:17px}
+.icon.sm.empty{background:none;border:1px dashed var(--line);color:var(--muted);opacity:.55}
+.icon.sm .plus{font-size:15px;line-height:1}
+.icon.sm.empty:hover{opacity:1}
+.icon-wrap.item .popover{top:36px;left:-34px;max-width:calc(100vw - 56px)}
+.icon-badge{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;overflow:hidden;font-size:16px;flex:none;background:var(--card)}
+.icon-badge img{width:100%;height:100%;object-fit:cover}
+.picked{display:flex;align-items:center;gap:8px}
+@media(max-width:600px){
+  .icon.sm{width:36px;height:36px;margin-top:2px}
+  .icon.sm .emoji{font-size:20px}
+}

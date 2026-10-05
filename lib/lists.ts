@@ -58,14 +58,14 @@ export function duplicate(list: List): List {
 /** Łączy listy w nową (deduplikacja po tekście); oryginały pozostają. */
 export function merge(lists: List[], name: string): List {
   const seen = new Set<string>();
-  const texts: string[] = [];
+  const items: Item[] = [];
   for (const l of lists)
     for (const i of l.items) {
       const k = i.text.toLowerCase();
       if (!seen.has(k)) {
         seen.add(k);
-        texts.push(i.text);
+        items.push({ ...newItem(i.text), ...(i.icon ? { icon: i.icon } : {}) });
       }
     }
-  return newList(name || lists.map((l) => l.name).join(" + "), texts);
+  return { ...newList(name || lists.map((l) => l.name).join(" + ")), items };
 }
