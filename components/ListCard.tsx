@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Item, List } from "@/lib/types";
 
 type Props = {
@@ -13,6 +13,73 @@ type Props = {
   act: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
   call: <T = any>(url: string, method?: string, body?: unknown) => Promise<T>;
 };
+
+/** Pole tekstowe zawijające tekst i rosnące wraz z zawartością. */
+function AutoText({
+  className,
+  initial = "",
+  value,
+  onChange,
+  onCommit,
+  onEnter,
+  placeholder,
+  onPaste,
+}: {
+  className?: string;
+  initial?: string; // tryb niekontrolowany: zapis przy utracie fokusu
+  value?: string; // tryb kontrolowany (pole dodawania)
+  onChange?: (v: string) => void;
+  onCommit?: (v: string) => void;
+  onEnter?: () => void;
+  placeholder?: string;
+  onPaste?: React.ClipboardEventHandler<HTMLTextAreaElement>;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    }
+  };
+  useEffect(fit, [value, initial]);
+  useEffect(() => {
+    // dopasuj wysokość także gdy zmieni się szerokość (obrót telefonu, plakietka obok tekstu)
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let w = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth !== w) {
+        w = el.clientWidth;
+        fit();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const controlled = value !== undefined;
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={className}
+      placeholder={placeholder}
+      {...(controlled ? { value } : { defaultValue: initial })}
+      onChange={(e) => {
+        onChange?.(e.target.value);
+        fit();
+      }}
+      onBlur={(e) => onCommit?.(e.target.value)}
+      onPaste={onPaste}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" || e.shiftKey) return;
+        e.preventDefault();
+        if (onEnter) onEnter();
+        else (e.target as HTMLTextAreaElement).blur();
+      }}
+    />
+  );
+}
 
 export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList, onAdd, onDelete, act, call }: Props) {
   const [text, setText] = useState("");
@@ -53,21 +120,20 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
     <section className={`card${chosen ? " chosen" : ""}`}>
       <div className="card-head">
         {mergeMode && <input type="checkbox" checked={chosen} onChange={toggleChosen} aria-label="Wybierz do połączenia" />}
-        <input
+        <AutoText
           key={list.name}
           className="title"
-          defaultValue={list.name}
-          onBlur={(e) => e.target.value.trim() && e.target.value !== list.name && patch(base, { name: e.target.value })}
-          onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+          initial={list.name}
+          onCommit={(v) => v.trim() && v !== list.name && patch(base, { name: v })}
         />
       </div>
 
       <div className="row controls">
-        <button className="primary" onClick={drawNow} disabled={!selected}>Losuj</button>
+        <button className="primary big" onClick={drawNow} disabled={!selected}>Losuj</button>
         <div className="stepper" title="Ile pozycji losować">
-          <button onClick={() => patch(base, { pickCount: list.pickCount - 1 })} disabled={list.pickCount <= 1}>−</button>
+          <button onClick={() => patch(base, { pickCount: list.pickCount - 1 })} disabled={list.pickCount <= 1} aria-label="Mniej">−</button>
           <span>{list.pickCount}</span>
-          <button onClick={() => patch(base, { pickCount: list.pickCount + 1 })}>+</button>
+          <button onClick={() => patch(base, { pickCount: list.pickCount + 1 })} aria-label="Więcej">+</button>
         </div>
         <span className="muted small">{selected}/{list.items.length} zazn.</span>
       </div>
@@ -76,7 +142,7 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
         <div className="result">
           <div className="result-head">
             <span>Wylosowano</span>
-            <button className="link" onClick={() => setPicked(null)}>×</button>
+            <button className="link" onClick={() => setPicked(null)} aria-label="Zamknij">×</button>
           </div>
           {picked.map((p) => <strong key={p.id}>{p.text}</strong>)}
         </div>
@@ -88,12 +154,11 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
           return (
             <li key={i.id} className={i.selected ? "" : "off"}>
               <input type="checkbox" checked={i.selected} onChange={(e) => patch(`${base}/items/${i.id}`, { selected: e.target.checked })} />
-              <input
+              <AutoText
                 key={i.text}
                 className="item-text"
-                defaultValue={i.text}
-                onBlur={(e) => e.target.value.trim() && e.target.value !== i.text && patch(`${base}/items/${i.id}`, { text: e.target.value })}
-                onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                initial={i.text}
+                onCommit={(v) => v.trim() && v !== i.text && patch(`${base}/items/${i.id}`, { text: v })}
               />
               {a && (
                 <span
@@ -110,22 +175,24 @@ export default function ListCard({ list, mergeMode, chosen, toggleChosen, onList
         })}
       </ul>
 
-      <textarea
-        value={text}
-        rows={1}
-        placeholder="Dodaj pozycję (Enter; wklej wiele linii)"
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); add(); } }}
-        onPaste={(e) => {
-          const t = e.clipboardData.getData("text");
-          if (t.includes("\n")) { e.preventDefault(); post(`${base}/items`, { text: t }); }
-        }}
-      />
+      <div className="add">
+        <AutoText
+          className="add-text"
+          value={text}
+          onChange={setText}
+          onEnter={add}
+          placeholder="Nowa pozycja…"
+          onPaste={(e) => {
+            const t = e.clipboardData.getData("text");
+            if (t.includes("\n")) { e.preventDefault(); post(`${base}/items`, { text: t }); }
+          }}
+        />
+        <button className="primary" onClick={add} disabled={!text.trim()}>Dodaj</button>
+      </div>
 
-      <div className="row foot">
+      <div className="foot">
         <button onClick={() => post(`${base}/select`, { mode: "all" })}>Zaznacz wszystko</button>
         <button onClick={() => post(`${base}/select`, { mode: "none" })}>Odznacz wszystko</button>
-        <span className="spacer" />
         <button onClick={async () => { const l = await act(() => call<List>(`${base}/duplicate`, "POST")); if (l) onAdd(l); }}>Kopiuj</button>
         <button className="danger" onClick={async () => {
           if (!confirm(`Usunąć listę „${list.name}”?`)) return;

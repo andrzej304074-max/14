@@ -23,7 +23,7 @@ button.link{border:0;background:none;padding:0 4px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .card.chosen{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .card-head{display:flex;gap:8px;align-items:center}
-.title{flex:1;font-weight:600;font-size:17px;border:1px solid transparent!important;background:transparent!important;padding:4px 6px!important;min-width:0}
+.title{flex:1;width:100%;font-weight:600;font-size:17px;border:1px solid transparent!important;background:transparent!important;padding:4px 6px!important;min-width:0}
 .title:hover,.title:focus{border-color:var(--line)!important}
 .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .stepper button{border:0;border-radius:0;padding:7px 11px}
@@ -32,15 +32,38 @@ button.link{border:0;background:none;padding:0 4px;color:var(--muted)}
 .result-head{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 .result strong{font-size:18px;color:var(--accent)}
 ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-li{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)}
+li{display:flex;align-items:flex-start;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)}
 li:last-child{border:0}
 li.off .item-text{color:var(--muted)}
-.item-text{flex:1;min-width:0;border:0!important;background:transparent!important;padding:4px 2px!important}
+.item-text{flex:1;width:100%;word-break:break-word;min-width:0;border:0!important;background:transparent!important;padding:4px 2px!important}
 .item-text:focus{background:var(--accent-soft)!important;border-radius:4px}
-input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:0}
-.badge{font-size:11px;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
-.x{border:0;background:none;color:var(--muted);padding:2px 6px}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px;margin:6px 0 0;flex:none}
+.badge{margin-top:5px;font-size:11px;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.x{border:0;background:none;color:var(--muted);padding:2px 8px;font-size:18px;line-height:1.4;flex:none}
 .x:hover{color:var(--danger)}
-textarea{resize:none;width:100%}
-.foot button{font-size:13px;padding:5px 9px}
-.spacer{flex:1}
+textarea{resize:none;overflow:hidden;font:inherit;color:inherit;line-height:1.4}
+
+
+.add{display:flex;gap:8px;align-items:flex-start}
+.add-text{flex:1;min-width:0;word-break:break-word}
+.add .primary{flex:none;padding:9px 16px}
+.foot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.foot button{font-size:13px;padding:9px 8px}
+.big{padding:9px 22px}
+.stepper button{padding:9px 14px}
+@media(max-width:600px){
+  main{padding:16px 12px 48px}
+  h1{font-size:20px}
+  .grid{grid-template-columns:1fr;gap:12px}
+  .card{padding:14px;border-radius:14px}
+  input,textarea,button{font-size:16px}
+  button{min-height:44px}
+  .foot button{font-size:14px}
+  header .row>*{flex:1 1 auto}
+  header .row button{flex:1 1 100%}
+  .controls .big{flex:1}
+  .x{min-width:40px;min-height:40px;padding:0}
+  input[type=checkbox]{width:22px;height:22px;margin:9px 0 0}
+  .badge{margin-top:11px}
+  .item-text,.add-text{padding:10px 6px!important}
+}
